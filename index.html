@@ -6,42 +6,68 @@
     <title>Inventory Management</title>
 </head>
 <body>
-    <h1>Upload Inventory Spreadsheet</h1>
-    <input type="file" id="fileInput">
-    <button onclick="uploadFile()">Upload</button>
-
-    <h2>Inventory</h2>
-    <ul id="inventoryList"></ul>
+    <h1>Inventory</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Image</th>
+                <th>Quantity</th>
+                <th>Request</th>
+            </tr>
+        </thead>
+        <tbody id="inventoryTable">
+        </tbody>
+    </table>
 
     <script>
-        function uploadFile() {
-            const fileInput = document.getElementById('fileInput');
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+        function fetchInventory() {
+            fetch('/inventory')
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('inventoryTable');
+                table.innerHTML = '';
+                data.forEach(item => {
+                    const row = table.insertRow();
+                    row.insertCell().textContent = item['Item name'];
+                    const imgCell = row.insertCell();
+                    const img = document.createElement('img');
+                    img.src = item['image of item'];
+                    img.width = 100;
+                    imgCell.appendChild(img);
+                    row.insertCell().textContent = item['quantity of item'];
 
-            fetch('/upload', {
+                    const requestCell = row.insertCell();
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = 1;
+                    input.value = 1;
+                    requestCell.appendChild(input);
+                    const button = document.createElement('button');
+                    button.textContent = 'Request';
+                    button.onclick = () => requestItems(item['Item name'], input.value);
+                    requestCell.appendChild(button);
+                });
+            });
+        }
+
+        function requestItems(itemName, amount) {
+            fetch('/request-items', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_name: itemName,
+                    amount: parseInt(amount)
+                })
             })
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
                 fetchInventory();
-            });
-        }
-
-        function fetchInventory() {
-            fetch('/inventory')
-            .then(response => response.json())
-            .then(data => {
-                const inventoryList = document.getElementById('inventoryList');
-                inventoryList.innerHTML = '';
-                data.forEach(item => {
-                    const li = document.createElement('li');
-                    li.textContent = JSON.stringify(item);
-                    inventoryList.appendChild(li);
-                });
-            });
+            })
+            .catch(err => alert("Error making request"));
         }
 
         fetchInventory();
