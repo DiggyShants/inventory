@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management</title>
+</head>
+<body>
+    <h1>Upload Inventory Spreadsheet</h1>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload</button>
+
+    <h2>Inventory</h2>
+    <ul id="inventoryList"></ul>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchInventory();
+            });
+        }
+
+        function fetchInventory() {
+            fetch('/inventory')
+            .then(response => response.json())
+            .then(data => {
+                const inventoryList = document.getElementById('inventoryList');
+                inventoryList.innerHTML = '';
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = JSON.stringify(item);
+                    inventoryList.appendChild(li);
+                });
+            });
+        }
+
+        fetchInventory();
+    </script>
+</body>
+</html>
